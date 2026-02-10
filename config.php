@@ -2,7 +2,7 @@
 // config.php - подключение к базе данных
 session_start();
 
-define('DB_HOST', 'localhost');
+define('DB_HOST', '134.90.167.42:10306');
 define('DB_NAME', 'project_Filippov');
 define('DB_USER', 'Filippov');
 define('DB_PASS', 'tU/aX8o(jX9q)dvq');
