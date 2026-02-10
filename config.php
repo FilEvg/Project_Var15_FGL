@@ -4,8 +4,8 @@ session_start();
 
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'project_Filippov');
-define('DB_USER', 'admin');
-define('DB_PASS', 'admin');
+define('DB_USER', 'Filippov');
+define('DB_PASS', 'tU/aX8o(jX9q)dvq');
 define('SITE_NAME', 'Система исследования рынка');
 
 function getConnection() {
