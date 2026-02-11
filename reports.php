@@ -8,6 +8,9 @@ if (!isLoggedIn() && !isGuest()) {
 
 $conn = getConnection();
 
+// Проверяем права на экспорт
+$canExport = hasPermission('export_reports'); // Админ и пользователь
+
 // Параметры отчета
 $report_type = isset($_GET['report_type']) ? sanitize($_GET['report_type']) : 'sales';
 $date_from = isset($_GET['date_from']) ? sanitize($_GET['date_from']) : date('Y-m-01');
@@ -149,11 +152,11 @@ displayHeader('Отчеты');
 <div class="container mt-4">
     <h2><i class="bi bi-file-earmark-text"></i> Аналитические отчеты</h2>
     
-    <?php if (isGuest()): ?>
-    <div class="alert alert-info">
-        <i class="bi bi-eye"></i> Вы находитесь в гостевом режиме. Просмотр отчетов доступен без ограничений.
-    </div>
-    <?php endif; ?>
+    <?php if (!hasPermission('export_reports') && !isGuest()): ?>
+<div class="alert alert-warning">
+    <i class="bi bi-shield-exclamation"></i> У вас есть права только на просмотр отчетов. Для экспорта данных нужны соответствующие права.
+</div>
+<?php endif; ?>
     
     <?php if (isset($_GET['generate'])): ?>
     <!-- Полный отчет -->
@@ -262,10 +265,12 @@ displayHeader('Отчеты');
                 <button onclick="window.print()" class="btn btn-primary me-2">
                     <i class="bi bi-printer"></i> Печать
                 </button>
+                <?php if ($canExport): ?>
                 <a href="?<?php echo http_build_query(array_merge($_GET, ['export' => 'csv'])); ?>" 
                    class="btn btn-success">
                     <i class="bi bi-file-earmark-excel"></i> Экспорт в CSV
                 </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
