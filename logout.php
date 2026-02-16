@@ -4,6 +4,8 @@ require_once 'config.php';
 session_start();
 // Завершаем гостевой режим, если он был
 endGuestMode();
+// Очищаем все данные сессии
+$_SESSION = array();
 session_destroy();
 redirect('login.php');
 ?>
