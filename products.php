@@ -1,7 +1,7 @@
 <?php
 require_once 'config.php';
 
-// Гости могут просматривать товары
+// Все могут просматривать товары
 if (!isLoggedIn() && !isGuest()) {
     redirect('login.php');
 }
@@ -13,16 +13,18 @@ $message = '';
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// Проверяем права на редактирование
-if (!canEdit() && in_array($action, ['add', 'edit', 'delete'])) {
-    $message = '<div class="alert alert-warning">Недостаточно прав для выполнения этого действия. <a href="login.php" class="alert-link">Войдите в систему</a>.</div>';
+// Проверяем права на редактирование с учетом ролей
+$canEditProducts = hasPermission('edit_data'); // Админ и пользователь
+
+if (!$canEditProducts && in_array($action, ['add', 'edit', 'delete'])) {
+    $message = '<div class="alert alert-warning">Недостаточно прав для выполнения этого действия.</div>';
     $action = '';
 }
 
 // Обработка действий
 switch ($action) {
     case 'add':
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && canEdit()) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEditProducts) {
             $name = sanitize($_POST['name']);
             $internal_code = sanitize($_POST['internal_code']);
             $category = sanitize($_POST['category']);
@@ -44,7 +46,7 @@ switch ($action) {
     case 'edit':
         if ($id <= 0) redirect('products.php');
         
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && canEdit()) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canEditProducts) {
             $name = sanitize($_POST['name']);
             $internal_code = sanitize($_POST['internal_code']);
             $category = sanitize($_POST['category']);
@@ -70,7 +72,7 @@ switch ($action) {
         break;
         
     case 'delete':
-        if ($id > 0 && isset($_GET['confirm']) && $_GET['confirm'] == 'yes' && canEdit()) {
+        if ($id > 0 && isset($_GET['confirm']) && $_GET['confirm'] == 'yes' && $canEditProducts) {
             // Проверяем, есть ли связанные продажи
             $check_sql = "SELECT COUNT(*) as count FROM sales WHERE product_id = ?";
             $check_stmt = $conn->prepare($check_sql);
@@ -134,6 +136,10 @@ displayHeader('Товары' . ($action ? ' - ' . ucfirst($action) : ''));
     <div class="alert alert-info">
         <i class="bi bi-eye"></i> Вы находитесь в гостевом режиме. Для редактирования товаров необходимо <a href="login.php" class="alert-link">войти в систему</a>.
     </div>
+    <?php elseif (!hasPermission('edit_data')): ?>
+    <div class="alert alert-warning">
+        <i class="bi bi-shield-exclamation"></i> У вас есть права только на просмотр товаров. Для редактирования нужны соответствующие права.
+    </div>
     <?php endif; ?>
     
     <?php echo $message; ?>
@@ -147,7 +153,7 @@ displayHeader('Товары' . ($action ? ' - ' . ucfirst($action) : ''));
                     <i class="bi bi-pencil-square"></i> Редактирование товара
                 </div>
                 <div class="card-body">
-                    <?php if (canEdit()): ?>
+                    <?php if ($canEditProducts): ?>
                     <form method="POST" action="?action=edit&id=<?php echo $id; ?>">
                         <div class="mb-3">
                             <label class="form-label">Название товара:</label>
@@ -260,7 +266,7 @@ displayHeader('Товары' . ($action ? ' - ' . ucfirst($action) : ''));
                         Если у товара есть история продаж, он будет деактивирован вместо удаления.
                     </div>
                     
-                    <?php if (canEdit()): ?>
+                    <?php if ($canEditProducts): ?>
                     <div class="mt-4">
                         <a href="?action=delete&id=<?php echo $id; ?>&confirm=yes" 
                            class="btn btn-danger btn-lg me-3">
@@ -283,8 +289,8 @@ displayHeader('Товары' . ($action ? ' - ' . ucfirst($action) : ''));
     <?php else: ?>
     <!-- Основной интерфейс: список товаров -->
     <div class="row">
-        <?php if (canEdit()): ?>
-        <!-- Форма добавления товара (только для авторизованных) -->
+        <?php if ($canEditProducts): ?>
+        <!-- Форма добавления товара (только для авторизованных с правами) -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -333,7 +339,7 @@ displayHeader('Товары' . ($action ? ' - ' . ucfirst($action) : ''));
                                     <th>Артикул</th>
                                     <th>Категория</th>
                                     <th>Статус</th>
-                                    <?php if (canEdit()): ?>
+                                    <?php if ($canEditProducts): ?>
                                     <th>Действия</th>
                                     <?php endif; ?>
                                 </tr>
@@ -350,7 +356,7 @@ displayHeader('Товары' . ($action ? ' - ' . ucfirst($action) : ''));
                                             <?php echo $product['is_active'] ? 'Активен' : 'Неактивен'; ?>
                                         </span>
                                     </td>
-                                    <?php if (canEdit()): ?>
+                                    <?php if ($canEditProducts): ?>
                                     <td>
                                         <a href="?action=edit&id=<?php echo $product['id']; ?>" 
                                            class="btn btn-sm btn-warning">

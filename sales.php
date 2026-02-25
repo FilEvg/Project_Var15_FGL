@@ -13,9 +13,11 @@ $message = '';
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// Проверяем права на редактирование
-if (!canEdit() && in_array($action, ['add', 'delete'])) {
-    $message = '<div class="alert alert-warning">Недостаточно прав для выполнения этого действия. <a href="login.php" class="alert-link">Войдите в систему</a>.</div>';
+// Проверяем права на редактирование с учетом ролей
+$canEditSales = hasPermission('edit_data'); // Админ и пользователь
+
+if (!$canEditSales && in_array($action, ['add', 'delete'])) {
+    $message = '<div class="alert alert-warning">Недостаточно прав для выполнения этого действия.</div>';
     $action = '';
 }
 
@@ -98,9 +100,11 @@ displayHeader('Продажи' . ($action == 'delete' ? ' - Удаление' : 
     <div class="alert alert-info">
         <i class="bi bi-eye"></i> Вы находитесь в гостевом режиме. Для редактирования продаж необходимо <a href="login.php" class="alert-link">войти в систему</a>.
     </div>
-    <?php endif; ?>
-    
-    <?php echo $message; ?>
+    <?php elseif (!hasPermission('edit_data')): ?>
+    <div class="alert alert-warning">
+        <i class="bi bi-shield-exclamation"></i> У вас есть права только на просмотр продаж. Для редактирования нужны соответствующие права.
+</div>
+<?php endif; ?>
     
     <?php if ($action == 'delete' && $id > 0): ?>
     <!-- Подтверждение удаления -->
@@ -136,8 +140,8 @@ displayHeader('Продажи' . ($action == 'delete' ? ' - Удаление' : 
     <?php else: ?>
     <!-- Основной интерфейс -->
     <div class="row">
-        <?php if (canEdit()): ?>
-        <!-- Форма добавления продажи (только для авторизованных) -->
+        <?php if ($canEditSales): ?>
+        <!-- Форма добавления продажи (только для авторизованных с правами) -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -222,7 +226,7 @@ displayHeader('Продажи' . ($action == 'delete' ? ' - Удаление' : 
             </div>
         </div>
         
-        <div class="<?php echo canEdit() ? 'col-md-8' : 'col-md-12'; ?>">
+        <div class="<?php echo $canEditSales ? 'col-md-8' : 'col-md-12'; ?>">
             <div class="card">
                 <div class="card-header bg-secondary text-white">
                     <i class="bi bi-list"></i> Последние продажи (50 записей)
@@ -256,7 +260,7 @@ displayHeader('Продажи' . ($action == 'delete' ? ' - Удаление' : 
                                     <td><?php echo $sale['quantity']; ?></td>
                                     <td><?php echo number_format($sale['total_amount'], 2); ?> ₽</td>
                                     <td><?php echo number_format($price_per_unit, 2); ?> ₽</td>
-                                    <?php if (canEdit()): ?>
+                                    <?php if ($canEditSales): ?>
                                     <td>
                                         <a href="?action=delete&id=<?php echo $sale['id']; ?>" 
                                            class="btn btn-sm btn-danger"

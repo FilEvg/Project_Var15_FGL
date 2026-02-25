@@ -9,8 +9,11 @@ if (!isLoggedIn() && !isGuest()) {
 $conn = getConnection();
 $message = '';
 
+// Проверяем права на редактирование
+$canEditCompetitors = hasPermission('edit_data');
+
 // Обработка добавления конкурента
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_competitor']) && canEdit()) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_competitor']) && $canEditCompetitors) {
     $name = sanitize($_POST['name']);
     $website = sanitize($_POST['website']);
     
@@ -26,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_competitor']) && 
 }
 
 // Обработка добавления цены конкурента
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_price']) && canEdit()) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_price']) && $canEditCompetitors) {
     $competitor_id = intval($_POST['competitor_id']);
     $product_id = intval($_POST['product_id']);
     $check_date = sanitize($_POST['check_date']);
@@ -52,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_price']) && canEd
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-if ($action == 'delete' && $id > 0 && isset($_GET['confirm']) && $_GET['confirm'] == 'yes' && canEdit()) {
+if ($action == 'delete' && $id > 0 && isset($_GET['confirm']) && $_GET['confirm'] == 'yes' && $canEditCompetitors) {
     $type = isset($_GET['type']) ? $_GET['type'] : '';
     
     if ($type == 'competitor') {
@@ -110,6 +113,10 @@ displayHeader('Конкуренты');
     <div class="alert alert-info">
         <i class="bi bi-eye"></i> Вы находитесь в гостевом режиме. Для редактирования данных необходимо <a href="login.php" class="alert-link">войти в систему</a>.
     </div>
+    <?php elseif (!hasPermission('edit_data')): ?>
+    <div class="alert alert-warning">
+        <i class="bi bi-shield-exclamation"></i> У вас есть права только на просмотр данных конкурентов. Для редактирования нужны соответствующие права.
+    </div>
     <?php endif; ?>
     
     <?php echo $message; ?>
@@ -125,7 +132,7 @@ displayHeader('Конкуренты');
                 <div class="card-body text-center">
                     <h5 class="card-title">Вы уверены, что хотите удалить эту запись?</h5>
                     
-                    <?php if (canEdit()): ?>
+                    <?php if ($canEditCompetitors): ?>
                     <div class="mt-4">
                         <a href="?action=delete&id=<?php echo $id; ?>&type=<?php echo $_GET['type']; ?>&confirm=yes" 
                            class="btn btn-danger btn-lg me-3">
@@ -148,7 +155,7 @@ displayHeader('Конкуренты');
     <?php else: ?>
     <!-- Основной интерфейс -->
     <div class="row mt-3">
-        <?php if (canEdit()): ?>
+        <?php if ($canEditCompetitors): ?>
         <!-- Левая колонка: формы добавления -->
         <div class="col-md-4">
             <div class="card mb-3">
@@ -249,7 +256,7 @@ displayHeader('Конкуренты');
                                         <tr>
                                             <th>#</th>
                                             <th>Название</th>
-                                            <?php if (canEdit()): ?>
+                                            <?php if ($canEditCompetitors): ?>
                                             <th>Действия</th>
                                             <?php endif; ?>
                                         </tr>
@@ -269,7 +276,7 @@ displayHeader('Конкуренты');
                                                 </small>
                                                 <?php endif; ?>
                                             </td>
-                                            <?php if (canEdit()): ?>
+                                            <?php if ($canEditCompetitors): ?>
                                             <td>
                                                 <a href="?action=delete&id=<?php echo $competitor['id']; ?>&type=competitor" 
                                                    class="btn btn-sm btn-danger"
@@ -301,7 +308,7 @@ displayHeader('Конкуренты');
                                             <th>Дата</th>
                                             <th>Конкурент</th>
                                             <th>Цена</th>
-                                            <?php if (canEdit()): ?>
+                                            <?php if ($canEditCompetitors): ?>
                                             <th>Действия</th>
                                             <?php endif; ?>
                                         </tr>
@@ -316,7 +323,7 @@ displayHeader('Конкуренты');
                                                 <small class="text-muted"><?php echo $price['product_name']; ?></small>
                                             </td>
                                             <td><strong><?php echo number_format($price['price'], 0); ?> ₽</strong></td>
-                                            <?php if (canEdit()): ?>
+                                            <?php if ($canEditCompetitors): ?>
                                             <td>
                                                 <a href="?action=delete&id=<?php echo $price['id']; ?>&type=price" 
                                                    class="btn btn-sm btn-danger"
@@ -353,7 +360,7 @@ displayHeader('Конкуренты');
                                             <th>Цена</th>
                                             <th>Название у конкурента</th>
                                             <th>Примечания</th>
-                                            <?php if (canEdit()): ?>
+                                            <?php if ($canEditCompetitors): ?>
                                             <th>Действия</th>
                                             <?php endif; ?>
                                         </tr>
@@ -371,7 +378,7 @@ displayHeader('Конкуренты');
                                             <td><strong><?php echo number_format($price['price'], 2); ?> ₽</strong></td>
                                             <td><small><?php echo $price['product_name_at_competitor']; ?></small></td>
                                             <td><small><?php echo $price['notes']; ?></small></td>
-                                            <?php if (canEdit()): ?>
+                                            <?php if ($canEditCompetitors): ?>
                                             <td>
                                                 <a href="?action=delete&id=<?php echo $price['id']; ?>&type=price" 
                                                    class="btn btn-sm btn-danger"

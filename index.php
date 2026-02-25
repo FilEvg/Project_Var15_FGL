@@ -16,6 +16,13 @@ $conn = getConnection();
         <i class="bi bi-info-circle"></i> Вы находитесь в <strong>гостевом режиме</strong>. Для редактирования данных необходимо <a href="login.php" class="alert-link">войти в систему</a>.
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    <?php elseif (isLoggedIn()): ?>
+    <div class="alert alert-<?php echo isAdmin() ? 'danger' : 'success'; ?> alert-dismissible fade show" role="alert">
+        <i class="bi bi-person-badge"></i> Вы вошли как 
+        <strong><?php echo isAdmin() ? 'Администратор' : 'Пользователь'; ?></strong>. 
+        <?php echo isAdmin() ? 'У вас есть полный доступ ко всем функциям системы.' : 'Вы можете редактировать данные, но не управлять пользователями.'; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     <?php endif; ?>
     
     <h2 class="mb-4">Панель управления</h2>
@@ -27,7 +34,7 @@ $conn = getConnection();
                 <div class="card-body">
                     <i class="bi bi-box dashboard-icon"></i>
                     <h5 class="card-title mt-2">Товары</h5>
-                    <p class="card-text"><?php echo isGuest() ? 'Просмотр товаров' : 'Управление товарами компании'; ?></p>
+                    <p class="card-text"><?php echo isGuest() ? 'Просмотр товаров' : (isAdmin() ? 'Полное управление товарами' : 'Работа с товарами компании'); ?></p>
                     <a href="products.php" class="btn btn-primary">Перейти</a>
                 </div>
             </div>
@@ -38,7 +45,7 @@ $conn = getConnection();
                 <div class="card-body">
                     <i class="bi bi-cart-check dashboard-icon"></i>
                     <h5 class="card-title mt-2">Продажи</h5>
-                    <p class="card-text"><?php echo isGuest() ? 'Просмотр продаж' : 'Учет продаж по подразделениям'; ?></p>
+                    <p class="card-text"><?php echo isGuest() ? 'Просмотр продаж' : (isAdmin() ? 'Полный учет продаж' : 'Учет продаж по подразделениям'); ?></p>
                     <a href="sales.php" class="btn btn-primary">Перейти</a>
                 </div>
             </div>
@@ -49,7 +56,7 @@ $conn = getConnection();
                 <div class="card-body">
                     <i class="bi bi-bar-chart dashboard-icon"></i>
                     <h5 class="card-title mt-2">Конкуренты</h5>
-                    <p class="card-text"><?php echo isGuest() ? 'Просмотр конкурентов' : 'Мониторинг цен конкурентов'; ?></p>
+                    <p class="card-text"><?php echo isGuest() ? 'Просмотр конкурентов' : (isAdmin() ? 'Полный мониторинг цен' : 'Мониторинг цен конкурентов'); ?></p>
                     <a href="competitors.php" class="btn btn-primary">Перейти</a>
                 </div>
             </div>
@@ -60,7 +67,7 @@ $conn = getConnection();
                 <div class="card-body">
                     <i class="bi bi-file-earmark-text dashboard-icon"></i>
                     <h5 class="card-title mt-2">Отчеты</h5>
-                    <p class="card-text"><?php echo isGuest() ? 'Просмотр отчетов' : 'Анализ динамики продаж'; ?></p>
+                    <p class="card-text"><?php echo isGuest() ? 'Просмотр отчетов' : (isAdmin() ? 'Полный анализ данных' : 'Анализ динамики продаж'); ?></p>
                     <a href="reports.php" class="btn btn-primary">Перейти</a>
                 </div>
             </div>

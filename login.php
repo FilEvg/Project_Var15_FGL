@@ -17,8 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = sanitize($_POST['username']);
     $password = $_POST['password'];
     
+    // Подключаемся к основной БД для получения данных пользователя
     $conn = getConnection();
-    $sql = "SELECT id, username, password, full_name FROM users WHERE username = ? AND is_active = 1";
+    $sql = "SELECT id, username, full_name, email, is_active FROM users WHERE username = ? AND is_active = 1";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -26,19 +27,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
-        if ($password === $user['password']) {
+        
+        // Проверяем пароль в локальной БД
+        if (verifyPassword($username, $password)) {
             // Завершаем гостевой режим, если он был
             endGuestMode();
             
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['role'] = getUserRole($user['id']); // Получаем и сохраняем роль пользователя
             redirect('index.php');
         } else {
             $error = 'Неверный пароль';
         }
     } else {
-        $error = 'Пользователь не найден';
+        $error = 'Пользователь не найден или неактивен';
     }
     $conn->close();
 }
