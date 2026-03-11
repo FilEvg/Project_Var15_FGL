@@ -1,0 +1,230 @@
+/* Основные стили */
+body {
+    padding-top: 20px;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Карточки */
+.card {
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,.15);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+/* Иконки на главной */
+.dashboard-icon {
+    font-size: 3rem;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+/* Таблицы */
+.table {
+    font-size: 0.9rem;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Кнопки */
+.btn {
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.8em;
+}
+
+/* Формы */
+.form-control, .form-select {
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Навигация */
+.navbar {
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* Подвал */
+footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Отчеты */
+.report-header {
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .container {
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .dashboard-icon {
+        font-size: 2rem;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+}
+
+/* Конкуренты - таблицы в ряд */
+.competitor-tables .card {
+    height: 100%;
+}
+
+.competitor-tables .table-responsive {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+/* Компактные таблицы для конкурентов */
+.compact-table th,
+.compact-table td {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+}
+
+.compact-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 10;
+}
+
+/* Адаптивность для таблиц конкурентов */
+@media (max-width: 768px) {
+    .competitor-tables .col-md-6 {
+        margin-bottom: 15px;
+    }
+    
+    .compact-table th,
+    .compact-table td {
+        padding: 0.25rem 0.3rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Стили для гостевого режима */
+.guest-alert {
+    border-left: 4px solid #0dcaf0;
+}
+
+.guest-badge {
+    font-size: 0.7em;
+    vertical-align: middle;
+}
+
+/* Стили для кнопок с учетом прав */
+.btn-locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Адаптивность для гостевого режима */
+@media (max-width: 768px) {
+    .guest-alert .alert {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+}
+
+/* Стили для страницы входа */
+.login-options {
+    margin-top: 20px;
+}
+
+.guest-btn {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+.guest-btn:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: white;
+}
+
+/* Индикатор режима в навигации */
+.mode-indicator {
+    font-size: 0.8em;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.mode-guest {
+    background-color: #0dcaf0;
+    color: white;
+}
+
+.mode-user {
+    background-color: #198754;
+    color: white;
+}
