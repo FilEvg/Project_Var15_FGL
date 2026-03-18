@@ -30,6 +30,9 @@ switch ($page) {
     case 'backup';
         page_backup();
         break;
+    case 'analytics':
+        require_once 'analytics.php';
+        break;
     default:
         page_home();
 }
@@ -1024,13 +1027,30 @@ function page_competitors() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_competitor']) && $canEditCompetitors) {
         $name = sanitize($_POST['name']);
         $website = sanitize($_POST['website']);
-        
+
         $sql = "INSERT INTO competitors (name, website) VALUES (?, ?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ss", $name, $website);
-        
+
         if ($stmt->execute()) {
             $message = '<div class="alert alert-success">Конкурент успешно добавлен</div>';
+        } else {
+            $message = '<div class="alert alert-danger">Ошибка: ' . $conn->error . '</div>';
+        }
+    }
+
+    // Обработка обновления конкурента
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_competitor']) && $canEditCompetitors) {
+        $competitor_id = intval($_POST['competitor_id']);
+        $name = sanitize($_POST['edit_name']);
+        $website = sanitize($_POST['edit_website']);
+
+        $sql = "UPDATE competitors SET name = ?, website = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssi", $name, $website, $competitor_id);
+
+        if ($stmt->execute()) {
+            $message = '<div class="alert alert-success">Конкурент успешно обновлен</div>';
         } else {
             $message = '<div class="alert alert-danger">Ошибка: ' . $conn->error . '</div>';
         }
@@ -1044,15 +1064,62 @@ function page_competitors() {
         $price = floatval($_POST['price']);
         $product_name_at_competitor = sanitize($_POST['product_name_at_competitor']);
         $notes = sanitize($_POST['notes']);
-        
-        $sql = "INSERT INTO competitor_prices (competitor_id, product_id, check_date, price, product_name_at_competitor, notes) VALUES (?, ?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iisdss", $competitor_id, $product_id, $check_date, $price, $product_name_at_competitor, $notes);
-        
-        if ($stmt->execute()) {
-            $message = '<div class="alert alert-success">Цена конкурента сохранена</div>';
+
+        // Проверка даты
+        $today = date('Y-m-d');
+        if ($check_date > $today) {
+            $message = '<div class="alert alert-danger">Ошибка: Нельзя добавить цену с датой в будущем (сегодня ' . $today . ')</div>';
         } else {
-            $message = '<div class="alert alert-danger">Ошибка: ' . $conn->error . '</div>';
+            // Устанавливаем переменную пользователя для триггера
+            $current_username = isset($_SESSION['username']) ? $_SESSION['username'] : 'unknown';
+            $conn->query("SET @current_user = '$current_username'");
+
+            $sql = "INSERT INTO competitor_prices (competitor_id, product_id, check_date, price, product_name_at_competitor, notes) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("iisdss", $competitor_id, $product_id, $check_date, $price, $product_name_at_competitor, $notes);
+
+            if ($stmt->execute()) {
+                $message = '<div class="alert alert-success">Цена конкурента сохранена</div>';
+            } else {
+                if (strpos($conn->error, 'future') !== false) {
+                    $message = '<div class="alert alert-danger">Ошибка: Нельзя добавить цену с датой в будущем</div>';
+                } else {
+                    $message = '<div class="alert alert-danger">Ошибка: ' . $conn->error . '</div>';
+                }
+            }
+        }
+    }
+
+    // Обработка обновления цены конкурента
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_price']) && $canEditCompetitors) {
+        $price_id = intval($_POST['price_id']);
+        $check_date = sanitize($_POST['check_date']);
+        $price = floatval($_POST['price']);
+        $product_name_at_competitor = sanitize($_POST['product_name_at_competitor']);
+        $notes = sanitize($_POST['notes']);
+
+        // Проверка даты
+        $today = date('d.m.Y');
+        if ($check_date > $today) {
+            $message = '<div class="alert alert-danger">Ошибка: Нельзя установить дату в будущем (сегодня ' . $today . ')</div>';
+        } else {
+            // Устанавливаем переменную пользователя для триггера
+            $current_username = isset($_SESSION['username']) ? $_SESSION['username'] : 'unknown';
+            $conn->query("SET @current_user = '$current_username'");
+
+            $sql = "UPDATE competitor_prices SET check_date = ?, price = ?, product_name_at_competitor = ?, notes = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sdssi", $check_date, $price, $product_name_at_competitor, $notes, $price_id);
+
+            if ($stmt->execute()) {
+                $message = '<div class="alert alert-success">Цена конкурента обновлена</div>';
+            } else {
+                if (strpos($conn->error, 'future') !== false) {
+                    $message = '<div class="alert alert-danger">Ошибка: Нельзя установить дату в будущем</div>';
+                } else {
+                    $message = '<div class="alert alert-danger">Ошибка: ' . $conn->error . '</div>';
+                }
+            }
         }
     }
 
@@ -1243,13 +1310,19 @@ function page_competitors() {
                                             <tr>
                                                 <td><?php echo $competitor['id']; ?></td>
                                                 <td>
-                                                    <td><strong><?php echo htmlspecialchars($competitor['name'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
+                                                    <strong><?php echo htmlspecialchars($competitor['name'], ENT_QUOTES, 'UTF-8'); ?></strong>
                                                     <?php if ($competitor['website']): ?>
-                                                    <br><small><a href="<?php echo htmlspecialchars($competitor['website'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank">Сайт</a></small>
+                                                    <br><small><a href="<?php echo htmlspecialchars($competitor['website'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer"><i class="bi bi-link-45deg"></i> Сайт</a></small>
                                                     <?php endif; ?>
                                                 </td>
                                                 <?php if ($canEditCompetitors): ?>
                                                 <td>
+                                                    <button class="btn btn-sm btn-primary edit-competitor-btn"
+                                                            data-id="<?php echo $competitor['id']; ?>"
+                                                            data-name="<?php echo htmlspecialchars($competitor['name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                            data-website="<?php echo htmlspecialchars($competitor['website'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
                                                     <a href="index.php?page=competitors&action=delete&id=<?php echo $competitor['id']; ?>&type=competitor" class="btn btn-sm btn-danger" onclick="return confirm('Удалить конкурента?')"><i class="bi bi-trash"></i></a>
                                                 </td>
                                                 <?php endif; ?>
@@ -1330,12 +1403,22 @@ function page_competitors() {
                                             <tr>
                                                 <td><?php echo date('d.m.Y', strtotime($price['check_date'])); ?></td>
                                                 <td><?php echo htmlspecialchars($price['competitor_name'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                                <td><small><?php echo htmlspecialchars($price['product_name'], ENT_QUOTES, 'UTF-8'); ?></small>
+                                                <td><small><?php echo htmlspecialchars($price['product_name'], ENT_QUOTES, 'UTF-8'); ?></small></td>
                                                 <td><strong><?php echo number_format($price['price'], 2); ?> ₽</strong></td>
                                                 <td><small><?php echo htmlspecialchars($price['product_name_at_competitor'] ?? '', ENT_QUOTES, 'UTF-8'); ?></small></td>
                                                 <td><small><?php echo htmlspecialchars($price['notes'] ?? '', ENT_QUOTES, 'UTF-8'); ?></small></td>
                                                 <?php if ($canEditCompetitors): ?>
                                                 <td>
+                                                    <button class="btn btn-sm btn-primary edit-price-btn"
+                                                            data-id="<?php echo $price['id']; ?>"
+                                                            data-date="<?php echo $price['check_date']; ?>"
+                                                            data-competitor="<?php echo htmlspecialchars($price['competitor_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                            data-product="<?php echo htmlspecialchars($price['product_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                            data-price="<?php echo $price['price']; ?>"
+                                                            data-name-at-competitor="<?php echo htmlspecialchars($price['product_name_at_competitor'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                            data-notes="<?php echo htmlspecialchars($price['notes'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
                                                     <a href="index.php?page=competitors&action=delete&id=<?php echo $price['id']; ?>&type=price" class="btn btn-sm btn-danger" onclick="return confirm('Удалить запись о цене?')"><i class="bi bi-trash"></i></a>
                                                 </td>
                                                 <?php endif; ?>
@@ -1351,7 +1434,115 @@ function page_competitors() {
             </div>
         </div>
         <?php endif; ?>
-        
+
+        <!-- Модальное окно редактирования конкурента -->
+        <?php if ($canEditCompetitors): ?>
+        <div class="modal fade" id="editCompetitorModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="bi bi-pencil"></i> Редактировать конкурента</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST">
+                        <div class="modal-body">
+                            <input type="hidden" name="competitor_id" id="edit_competitor_id">
+                            <div class="mb-3">
+                                <label>Название конкурента:</label>
+                                <input type="text" name="edit_name" id="edit_competitor_name" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Веб-сайт:</label>
+                                <input type="url" name="edit_website" id="edit_competitor_website" class="form-control" placeholder="https://example.com">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" name="update_competitor" class="btn btn-primary">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var competitorModal = new bootstrap.Modal(document.getElementById('editCompetitorModal'));
+            document.querySelectorAll('.edit-competitor-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('edit_competitor_id').value = this.dataset.id;
+                    document.getElementById('edit_competitor_name').value = this.dataset.name;
+                    document.getElementById('edit_competitor_website').value = this.dataset.website;
+                    competitorModal.show();
+                });
+            });
+        });
+        </script>
+        <?php endif; ?>
+
+        <!-- Модальное окно редактирования цены -->
+        <?php if ($canEditCompetitors): ?>
+        <div class="modal fade" id="editPriceModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="bi bi-pencil"></i> Редактировать цену</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST">
+                        <div class="modal-body">
+                            <input type="hidden" name="price_id" id="edit_price_id">
+                            <div class="mb-3">
+                                <label>Конкурент:</label>
+                                <input type="text" class="form-control" id="edit_competitor" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label>Товар:</label>
+                                <input type="text" class="form-control" id="edit_product" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label>Дата проверки:</label>
+                                <input type="date" name="check_date" id="edit_check_date" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Цена:</label>
+                                <input type="number" name="price" id="edit_price_input" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Название у конкурента:</label>
+                                <input type="text" name="product_name_at_competitor" id="edit_name_at_competitor" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label>Примечание:</label>
+                                <textarea name="notes" id="edit_notes" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" name="update_price" class="btn btn-primary">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var editModal = new bootstrap.Modal(document.getElementById('editPriceModal'));
+            document.querySelectorAll('.edit-price-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('edit_price_id').value = this.dataset.id;
+                    document.getElementById('edit_competitor').value = this.dataset.competitor;
+                    document.getElementById('edit_product').value = this.dataset.product;
+                    document.getElementById('edit_check_date').value = this.dataset.date;
+                    document.getElementById('edit_price_input').value = this.dataset.price;
+                    document.getElementById('edit_name_at_competitor').value = this.dataset.nameAtCompetitor;
+                    document.getElementById('edit_notes').value = this.dataset.notes;
+                    editModal.show();
+                });
+            });
+        });
+        </script>
+        <?php endif; ?>
+
         <a href="index.php?page=home" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left"></i> Назад в панель</a>
     </div>
     <?php

@@ -274,7 +274,10 @@ function displayHeader($title = '') {
                         <li class="nav-item">
                             <a class="nav-link" href="index.php?page=reports"><i class="bi bi-file-earmark-text"></i> Отчеты</a>
                         </li>
-                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php?page=analytics"><i class="bi bi-graph-up"></i> Аналитика</a>
+                        </li>
+
                         <!-- Только админы видят управление пользователями -->
                         <?php if (isAdmin()): ?>
                         <li class="nav-item">
