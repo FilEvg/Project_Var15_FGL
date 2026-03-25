@@ -793,15 +793,53 @@ function page_sales() {
                 $sale_date = sanitize($_POST['sale_date']);
                 $quantity = intval($_POST['quantity']);
                 $total_amount = floatval($_POST['total_amount']);
-                
-                $sql = "INSERT INTO sales (subdivision_id, product_id, sale_date, quantity, total_amount) VALUES (?, ?, ?, ?, ?)";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("iisid", $subdivision_id, $product_id, $sale_date, $quantity, $total_amount);
-                
-                if ($stmt->execute()) {
-                    $message = '<div class="alert alert-success">Продажа успешно добавлена</div>';
+        
+                // Проверка даты на стороне PHP (первичная защита)
+                $today = date('Y-m-d');
+                if ($sale_date > $today) {
+                    $message = '<div class="alert alert-danger">Ошибка: Нельзя добавить продажу с датой в будущем (сегодня ' . date('d.m.Y') . ')</div>';
                 } else {
-                    $message = '<div class="alert alert-danger">Ошибка: ' . $conn->error . '</div>';
+                    // Дополнительная проверка на отрицательные значения
+                    if ($quantity <= 0) {
+                        $message = '<div class="alert alert-danger">Ошибка: Количество товара должно быть положительным</div>';
+                    } elseif ($total_amount <= 0) {
+                        $message = '<div class="alert alert-danger">Ошибка: Сумма продажи должна быть положительной</div>';
+                    } else {
+                        // Устанавливаем переменную пользователя для триггера (если нужно)
+                        $current_username = isset($_SESSION['username']) ? $_SESSION['username'] : 'unknown';
+                        $conn->query("SET @current_user = '$current_username'");
+                
+                        // Используем try-catch для обработки ошибок триггера
+                        try {
+                            $sql = "INSERT INTO sales (subdivision_id, product_id, sale_date, quantity, total_amount) VALUES (?, ?, ?, ?, ?)";
+                            $stmt = $conn->prepare($sql);
+                            $stmt->bind_param("iisid", $subdivision_id, $product_id, $sale_date, $quantity, $total_amount);
+                    
+                            if ($stmt->execute()) {
+                                $message = '<div class="alert alert-success">Продажа успешно добавлена</div>';
+                            } else {
+                                // Если ошибка не была поймана try-catch
+                                $error_msg = $conn->error;
+                                if (strpos($error_msg, 'будущем') !== false || strpos($error_msg, 'future') !== false) {
+                                    $message = '<div class="alert alert-danger">Ошибка: Нельзя добавить продажу с датой в будущем</div>';
+                                } elseif (strpos($error_msg, 'положительным') !== false) {
+                                    $message = '<div class="alert alert-danger">Ошибка: ' . $error_msg . '</div>';
+                                } else {
+                                    $message = '<div class="alert alert-danger">Ошибка базы данных: ' . $error_msg . '</div>';
+                                }
+                            }
+                        } catch (Exception $e) {
+                            // Обработка исключения от триггера
+                            $error_msg = $e->getMessage();
+                            if (strpos($error_msg, 'будущем') !== false || strpos($error_msg, 'future') !== false) {
+                                $message = '<div class="alert alert-danger">Ошибка: Нельзя добавить продажу с датой в будущем</div>';
+                            } elseif (strpos($error_msg, 'положительным') !== false) {
+                                $message = '<div class="alert alert-danger">Ошибка: ' . $error_msg . '</div>';
+                            } else {
+                                $message = '<div class="alert alert-danger">Ошибка при добавлении продажи: ' . $error_msg . '</div>';
+                            }
+                        }
+                    }
                 }
             }
             break;
