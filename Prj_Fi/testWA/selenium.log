@@ -1,0 +1,22 @@
+11:39:31.066 INFO [LoggingOptions.configureLogEncoding] - Using the system default encoding
+11:39:31.070 INFO [OpenTelemetryTracer.createTracer] - Using OpenTelemetry for tracing
+11:39:31.402 INFO [NodeOptions.getSessionFactories] - Detected 12 available processors
+11:39:31.402 INFO [NodeOptions.discoverDrivers] - Looking for existing drivers on the PATH.
+11:39:31.402 INFO [NodeOptions.discoverDrivers] - Add '--selenium-manager true' to the startup command to setup drivers automatically.
+11:39:31.449 WARN [SeleniumManager.lambda$runCommand$1] - Exception managing chrome: Unable to discover proper chromedriver version in offline mode
+11:39:31.457 WARN [SeleniumManager.lambda$runCommand$1] - Unable to discover proper msedgedriver version in offline mode
+11:39:31.511 INFO [NodeOptions.report] - Adding Chrome for {"browserName": "chrome","platformName": "linux"} 12 times
+11:39:31.512 INFO [NodeOptions.report] - Adding Firefox for {"browserName": "firefox","platformName": "linux"} 12 times
+11:39:31.512 INFO [NodeOptions.report] - Adding Edge for {"browserName": "MicrosoftEdge","platformName": "linux"} 12 times
+11:39:31.543 INFO [Node.<init>] - Binding additional locator mechanisms: relative
+11:39:31.553 INFO [GridModel.setAvailability] - Switching Node 780cac23-1d9c-4a0e-832a-164a913e4071 (uri: http://172.17.0.52:4444) from DOWN to UP
+11:39:31.553 INFO [LocalDistributor.add] - Added node 780cac23-1d9c-4a0e-832a-164a913e4071 at http://172.17.0.52:4444. Health check every 120s
+11:39:31.617 INFO [Standalone.execute] - Started Selenium Standalone 4.27.0 (revision d6e718d): http://172.17.0.52:4444
+11:39:32.055 INFO [LocalDistributor.newSession] - Session request received by the Distributor: 
+ [Capabilities {browserName: firefox, moz:firefoxOptions: {prefs: {devtools.jsonview.enabled: false, reader.parse-on-load.enabled: false}}}]
+11:39:33.825 INFO [LocalNode.newSession] - Session created by the Node. Id: 82e14def-f914-43e5-ac09-2ad5463a876f, Caps: Capabilities {acceptInsecureCerts: false, browserName: firefox, browserVersion: 115.25.0, moz:accessibilityChecks: false, moz:buildID: 20250625151542, moz:firefoxOptions: {binary: /usr/bin/firefox, prefs: {devtools.jsonview.enabled: false, reader.parse-on-load.enabled: false}}, moz:geckodriverVersion: 0.35.0, moz:headless: false, moz:platformVersion: 6.12.21-1.red80.x86_64, moz:processID: 20885, moz:profile: /tmp/rust_mozprofilehFtLJV, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: linux, proxy: Proxy(), se:bidiEnabled: false, se:cdp: ws://172.17.0.52:4444/sessi..., setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify}
+11:39:33.827 INFO [LocalDistributor.newSession] - Session created by the Distributor. Id: 82e14def-f914-43e5-ac09-2ad5463a876f 
+ Caps: Capabilities {acceptInsecureCerts: false, browserName: firefox, browserVersion: 115.25.0, moz:accessibilityChecks: false, moz:buildID: 20250625151542, moz:firefoxOptions: {binary: /usr/bin/firefox, prefs: {devtools.jsonview.enabled: false, reader.parse-on-load.enabled: false}}, moz:geckodriverVersion: 0.35.0, moz:headless: false, moz:platformVersion: 6.12.21-1.red80.x86_64, moz:processID: 20885, moz:profile: /tmp/rust_mozprofilehFtLJV, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, moz:windowless: false, pageLoadStrategy: normal, platformName: linux, proxy: Proxy(), se:bidiEnabled: false, se:cdp: ws://172.17.0.52:4444/sessi..., setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify}
+11:39:39.256 INFO [LocalSessionMap.remove] - Deleted session from local Session Map, Id: 82e14def-f914-43e5-ac09-2ad5463a876f
+11:39:39.256 INFO [GridModel.release] - Releasing slot for session id 82e14def-f914-43e5-ac09-2ad5463a876f
+11:39:39.257 INFO [SessionSlot.stop] - Stopping session 82e14def-f914-43e5-ac09-2ad5463a876f

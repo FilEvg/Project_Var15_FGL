@@ -1,0 +1,12 @@
+{
+    "name": "testwa/selenium-tests",
+    "require": {
+        "php-webdriver/webdriver": "~1.15"
+    },
+    "authors": [
+        {
+            "name": "Evgeniy",
+            "email": "filipp0ffj@yandex.ru"
+        }
+    ]
+}
