@@ -2392,32 +2392,41 @@ function page_login() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $username = sanitize($_POST['username']);
         $password = $_POST['password'];
-        
-        $conn = getConnection();
-        $sql = "SELECT id, username, full_name, email, is_active FROM users WHERE username = ? AND is_active = 1";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 1) {
-            $user = $result->fetch_assoc();
-            
-            if (verifyPassword($username, $password)) {
-                endGuestMode();
-                
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['role'] = getUserRole($user['id']);
-                redirect('index.php?page=home');
-            } else {
-                $error = 'Неверный пароль';
-            }
+        $captchaInput = isset($_POST['captcha']) ? trim($_POST['captcha']) : '';
+
+        // Проверка капчи
+        if (!isset($_SESSION['captcha_code']) || $captchaInput !== $_SESSION['captcha_code']) {
+            $error = 'Неверный код с картинки. Попробуйте ещё раз.';
         } else {
-            $error = 'Пользователь не найден или неактивен';
+            // Капча верна — очищаем из сессии
+            unset($_SESSION['captcha_code']);
+
+            $conn = getConnection();
+            $sql = "SELECT id, username, full_name, email, is_active FROM users WHERE username = ? AND is_active = 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows === 1) {
+                $user = $result->fetch_assoc();
+
+                if (verifyPassword($username, $password)) {
+                    endGuestMode();
+
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['full_name'] = $user['full_name'];
+                    $_SESSION['role'] = getUserRole($user['id']);
+                    redirect('index.php?page=home');
+                } else {
+                    $error = 'Неверный пароль';
+                }
+            } else {
+                $error = 'Пользователь не найден или неактивен';
+            }
+            $conn->close();
         }
-        $conn->close();
     }
 
     if (isset($_GET['guest'])) {
@@ -2441,6 +2450,9 @@ function page_login() {
             .login-card { max-width: 400px; margin: 100px auto; border-radius: 15px; }
             .login-header { background-color: #007bff; color: white; border-radius: 15px 15px 0 0; }
             .guest-notice { background-color: rgba(13, 202, 240, 0.1); border-left: 4px solid #0dcaf0; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+            .captcha-container { display: flex; align-items: center; gap: 10px; }
+            .captcha-container img { border-radius: 8px; cursor: pointer; border: 2px solid #dee2e6; }
+            .captcha-container img:hover { border-color: #007bff; }
         </style>
     </head>
     <body>
@@ -2458,31 +2470,40 @@ function page_login() {
                         <i class="bi bi-info-circle"></i> Гостевой режим завершен. Войдите в систему для редактирования данных.
                     </div>
                     <?php endif; ?>
-                
+
                     <?php if ($error): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <?php echo $error; ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     <?php endif; ?>
-                
+
                     <form method="POST" action="">
                         <div class="mb-3">
                             <label for="username" class="form-label">Логин:</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control" id="username" name="username" required>
+                                <input type="text" class="form-control" id="username" name="username" required autocomplete="username">
                             </div>
                         </div>
-                    
+
                         <div class="mb-3">
                             <label for="password" class="form-label">Пароль:</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
                             </div>
                         </div>
-                    
+
+                        <div class="mb-3">
+                            <label for="captcha" class="form-label">Код с картинки:</label>
+                            <div class="captcha-container">
+                                <img id="captchaImg" src="captcha.php" alt="Капча" title="Нажмите для обновления" onclick="this.src='captcha.php?t='+Date.now()" width="200" height="50">
+                                <input type="text" class="form-control" id="captcha" name="captcha" maxlength="6" placeholder="6 цифр" required autocomplete="off" style="width:110px;">
+                            </div>
+                            <small class="text-muted">Нажмите на картинку чтобы обновить код</small>
+                        </div>
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-box-arrow-in-right"></i> Войти</button>
                             <a href="index.php?page=login&guest=true" class="btn btn-outline-secondary btn-lg">
@@ -2490,7 +2511,7 @@ function page_login() {
                             </a>
                         </div>
                     </form>
-                
+
                     <div class="mt-3 text-center">
                         <small class="text-muted">Тестовые данные: admin / admin123</small>
                         <div class="mt-2">
